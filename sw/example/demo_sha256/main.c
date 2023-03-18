@@ -17,7 +17,7 @@ const uint32_t K[64] = {
 
 int main() {
   neorv32_rte_setup();
-  neorv32_uart0_setup(BAUD_RATE, PARITY_NONE, FLOW_CONTROL_NONE);
+  neorv32_uart0_setup(BAUD_RATE, 0);
   neorv32_rte_check_isa(0); // silent = 0 -> show message if isa mismatch
 
   /* ======================================================================================== */
@@ -42,9 +42,6 @@ int main() {
 	H[7] = 0x5be0cd19;
 
   for (uint32_t i = 0; i < N; i++) {
-    neorv32_cpu_csr_write(CSR_MCYCLEH, 0);
-    neorv32_cpu_csr_write(CSR_MCYCLE, 0);
-    
     uint32_t W[64];
     
     // 1.
@@ -88,13 +85,7 @@ int main() {
     H[5] += f;
     H[6] += g;
     H[7] += h;
-    
-    uint32_t cycles_low = neorv32_cpu_csr_read(CSR_MCYCLE);
-    uint32_t cycles_high = neorv32_cpu_csr_read(CSR_MCYCLEH);
-
-    neorv32_uart0_printf("Clock Cycles = %u %u\n", cycles_high, cycles_low);
   }
-
 
   neorv32_uart0_printf("Message digest = 0x%x %x %x %x %x %x %x %x\n", H[0], H[1], H[2], H[3], H[4], H[5], H[6], H[7]);
 

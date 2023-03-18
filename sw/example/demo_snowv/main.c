@@ -5,7 +5,7 @@
 
 int main() {
   neorv32_rte_setup();
-  neorv32_uart0_setup(BAUD_RATE, PARITY_NONE, FLOW_CONTROL_NONE);
+  neorv32_uart0_setup(BAUD_RATE, 0);
   neorv32_rte_check_isa(0); // silent = 0 -> show message if isa mismatch
 
   /* ======================================================================================== */
@@ -30,9 +30,6 @@ int main() {
   A.u32[0] = iv[0];     B.u32[0] = 0x00000000;
 
   for (uint32_t t = 0; t < 16; t++) {
-    // neorv32_cpu_csr_write(CSR_MCYCLEH, 0);
-    // neorv32_cpu_csr_write(CSR_MCYCLE, 0);
-
 		snowv_keystream(z);
 
     A.u32[7] ^= z[3];
@@ -53,11 +50,6 @@ int main() {
       R1[1] ^= key[5];
       R1[0] ^= key[4];
     }
-
-    // uint32_t cycles_low = neorv32_cpu_csr_read(CSR_MCYCLE);
-    // uint32_t cycles_high = neorv32_cpu_csr_read(CSR_MCYCLEH);
-
-    // neorv32_uart0_printf("Clock Cycles = %u %u\n", cycles_high, cycles_low);
   }
 
   /* ======================================================================================== */

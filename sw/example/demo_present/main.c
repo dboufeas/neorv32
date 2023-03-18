@@ -4,7 +4,7 @@
 
 int main() {
   neorv32_rte_setup();
-  neorv32_uart0_setup(BAUD_RATE, PARITY_NONE, FLOW_CONTROL_NONE);
+  neorv32_uart0_setup(BAUD_RATE, 0);
   neorv32_rte_check_isa(0); // silent = 0 -> show message if isa mismatch
 
   /* ======================================================================================== */
@@ -27,16 +27,8 @@ int main() {
   round_keys[0][0] = key[0];
   round_keys[0][1] = key[1];
   for (uint32_t i = 1; i < 32; i++) {
-    neorv32_cpu_csr_write(CSR_MCYCLEH, 0);
-    neorv32_cpu_csr_write(CSR_MCYCLE, 0);
-
     round_keys[i][0] = neorv32_cfu_r3_instr(0b1000100, 0, 0x0, i);   // get round key msb
     round_keys[i][1] = neorv32_cfu_r3_instr(0b0000101, 0, 0x0, 0x0); // get round key lsb
-    
-    uint32_t cycles_low = neorv32_cpu_csr_read(CSR_MCYCLE);
-    uint32_t cycles_high = neorv32_cpu_csr_read(CSR_MCYCLEH);
-
-    neorv32_uart0_printf("Measurement = %u %u\n", cycles_high, cycles_low);
   }
 
   neorv32_uart0_printf("key gen done\n");
@@ -46,9 +38,6 @@ int main() {
   /* ======================================================================================== */
 
 	for (uint32_t i = 0; i < 31; i++) {  
-    neorv32_cpu_csr_write(CSR_MCYCLEH, 0);
-    neorv32_cpu_csr_write(CSR_MCYCLE, 0);
-
     // xor with round key
     state_high ^= round_keys[i][0];
     state_low ^= round_keys[i][1];
@@ -57,11 +46,6 @@ int main() {
     uint32_t temp = neorv32_cfu_r3_instr(0b0000000, 0, state_high, state_low);
     state_low = neorv32_cfu_r3_instr(0b0000001, 0, state_high, state_low);
     state_high= temp;
-
-    uint32_t cycles_low = neorv32_cpu_csr_read(CSR_MCYCLE);
-    uint32_t cycles_high = neorv32_cpu_csr_read(CSR_MCYCLEH);
-
-    neorv32_uart0_printf("Measurement = %u %u\n", cycles_high, cycles_low);
   }
 
   state_high ^= round_keys[31][0];
@@ -74,9 +58,6 @@ int main() {
   /* ======================================================================================== */
 
   for (uint32_t i = 0; i < 31; i++) {
-    neorv32_cpu_csr_write(CSR_MCYCLEH, 0);
-    neorv32_cpu_csr_write(CSR_MCYCLE, 0);
-
     // xor with round key
     state_high ^= round_keys[31-i][0];
     state_low ^= round_keys[31-i][1];
@@ -85,11 +66,6 @@ int main() {
     uint32_t temp = neorv32_cfu_r3_instr(0b0000010, 0, state_high, state_low);
     state_low = neorv32_cfu_r3_instr(0b0000011, 0, state_high, state_low);
     state_high = temp;
-    
-    uint32_t cycles_low = neorv32_cpu_csr_read(CSR_MCYCLE);
-    uint32_t cycles_high = neorv32_cpu_csr_read(CSR_MCYCLEH);
-
-    neorv32_uart0_printf("Measurement = %u %u\n", cycles_high, cycles_low);
   }  
 
   state_high ^= round_keys[0][0];
